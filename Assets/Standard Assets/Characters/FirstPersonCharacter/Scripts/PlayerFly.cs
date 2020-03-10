@@ -8,6 +8,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
     {
         // TODO Comments, headers, tooltips
         [SerializeField] private float jumpSpeed = 2f;
+        [SerializeField] private float jumpLerpSpeed = 0.5f;
         [SerializeField] private float maxJumpHeight = 10f;
         [SerializeField] private float floatTime = 3f;
 
@@ -40,34 +41,37 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 if (playerCharController.isGrounded)
                 {
-                    playerCharController.SimpleMove(Vector3.up);
+                    OnPlayerFly(true);
+                    currentJumpHeight = transform.position.y + maxJumpHeight;
+                }
+                if (transform.position.y < currentJumpHeight && floatTime > 0)
+                {                    
+                    float newJumpSpeed = Mathf.Lerp(0, jumpSpeed, jumpLerpSpeed * Time.fixedDeltaTime);
+                    playerCharController.Move(Vector3.up * newJumpSpeed);
                 }
                 else
-                {
-                    if (transform.position.y >= currentJumpHeight)
+                {                                        
+                    if (floatTime <= 0)
                     {
-                        currentJumpHeight = transform.position.y;
+                        OnPlayerFly(false);
                     }
                     else
                     {
-                        if (floatTime >= 0)
-                        {                            
-                            OnPlayerFly?.Invoke(true);
-                            floatTime -= Time.fixedDeltaTime;
-                        }
-                        else
-                        {
-                            OnPlayerFly?.Invoke(false);
-                            floatTime = initialFloatTime;
-                        }
+                        floatTime -= Time.fixedDeltaTime;
+                        
                     }
-                }
+                }                
             }
-            else if (!playerCharController.isGrounded || !isJumping)
+            else
             {
-                OnPlayerFly?.Invoke(false);
-                playerCharController.SimpleMove(Vector3.down);
-                currentJumpHeight = 0;
+                if (floatTime < initialFloatTime)
+                {
+                    floatTime += Time.fixedDeltaTime;
+                }
+                if (!playerCharController.isGrounded)
+                {
+                    OnPlayerFly(false);
+                }
             }
         }
     }

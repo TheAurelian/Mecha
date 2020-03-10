@@ -7906,33 +7906,12 @@ Mesh:
     offset: 0
     size: 0
     path: 
---- !u!1 &605731506 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 100000, guid: 5e9e851c0e142814dac026a256ba2ac0,
-    type: 3}
-  m_PrefabInstance: {fileID: 643456030}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &605731511 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0,
     type: 3}
   m_PrefabInstance: {fileID: 643456030}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &605731512
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 605731506}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c6377868c842a4c49bcff4911d770c35, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  jumpSpeed: 2
-  maxJumpHeight: 10
-  floatTime: 3
 --- !u!43 &612535899
 Mesh:
   m_ObjectHideFlags: 0
@@ -8592,6 +8571,10 @@ PrefabInstance:
     - target: {fileID: 11400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
       propertyPath: m_UseFovKick
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 11400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
+      propertyPath: floatTime
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 14300000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
       propertyPath: m_StepOffset
@@ -26184,6 +26167,10 @@ PrefabInstance:
     - target: {fileID: 440164, guid: 578b41abb5b96c6438c154da31ee6f3b, type: 3}
       propertyPath: m_LocalScale.z
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 11462128, guid: 578b41abb5b96c6438c154da31ee6f3b, type: 3}
+      propertyPath: IsLoop
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 578b41abb5b96c6438c154da31ee6f3b, type: 3}
