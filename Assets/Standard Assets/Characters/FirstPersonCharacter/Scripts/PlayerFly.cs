@@ -16,12 +16,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         private bool isJumping = false;
         private float currentJumpHeight = 0;
+        private float initialFloatTime;
 
         public static event System.Action<bool> OnPlayerFly;
 
         // Start is called before the first frame update
         void Start()
         {
+            initialFloatTime = floatTime;
             fpController = GetComponent<UnityStandardAssets.Characters.FirstPerson.FirstPersonController>();
             playerCharController = GetComponent<CharacterController>();
         }
@@ -38,21 +40,34 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 if (playerCharController.isGrounded)
                 {
-                    OnPlayerFly?.Invoke(true);
-                    currentJumpHeight = transform.position.y + maxJumpHeight;
                     playerCharController.SimpleMove(Vector3.up);
                 }
                 else
                 {
-                    if (transform.position.y <= currentJumpHeight)
+                    if (transform.position.y >= currentJumpHeight)
                     {
-                        playerCharController.SimpleMove(Vector3.up * jumpSpeed);
+                        currentJumpHeight = transform.position.y;
                     }
                     else
                     {
-                        OnPlayerFly?.Invoke(false);
+                        if (floatTime >= 0)
+                        {                            
+                            OnPlayerFly?.Invoke(true);
+                            floatTime -= Time.fixedDeltaTime;
+                        }
+                        else
+                        {
+                            OnPlayerFly?.Invoke(false);
+                            floatTime = initialFloatTime;
+                        }
                     }
                 }
+            }
+            else if (!playerCharController.isGrounded || !isJumping)
+            {
+                OnPlayerFly?.Invoke(false);
+                playerCharController.SimpleMove(Vector3.down);
+                currentJumpHeight = 0;
             }
         }
     }
