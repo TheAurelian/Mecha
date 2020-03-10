@@ -43,6 +43,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private float m_NextStep;
         private bool m_Jumping;
         private AudioSource m_AudioSource;
+        private Animator playerAnim;
 
         // Fly 
         [Header("How long the player will float before falling")]
@@ -65,7 +66,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_NextStep = m_StepCycle/2f;
             m_Jumping = false;
             m_AudioSource = GetComponent<AudioSource>();
-			m_MouseLook.Init(transform , m_Camera.transform);            
+			m_MouseLook.Init(transform , m_Camera.transform);
+            playerAnim = GetComponentInParent<Animator>();
         }
 
 
@@ -122,13 +124,25 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             if (isJumpHeld)
             {
+                if (m_CharacterController.isGrounded) 
+                {
+                    playerAnim.SetBool("Jump", false);
+                }
+                else
+                {
+                    playerAnim.SetBool("Jump", true);
+                }
+                
                 if (transform.position.y > currentMaxJumpHeight)
                 {
+                    playerAnim.SetBool("FloatUp", true);
                     m_GravityMultiplier = initialGravityModifier;
                     currentMaxJumpHeight = transform.position.y;
                 }
                 else
                 {
+                    playerAnim.SetBool("FloatUp", false);
+                    playerAnim.SetBool("Float", true);
                     isAtMaxJumpHeight = true;
                     m_GravityMultiplier = 0;
                     currentFloatTime -= Time.fixedDeltaTime;
@@ -136,6 +150,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
             else
             {
+                playerAnim.SetBool("FloatUp", false);
+                playerAnim.SetBool("Float", false);
+                playerAnim.SetBool("Drop", false);
                 isAtMaxJumpHeight = false;
                 currentMaxJumpHeight = 0;
                 currentFloatTime = floatTime;
@@ -144,6 +161,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             if (currentFloatTime <= 0)
             {
+                playerAnim.SetBool("Drop", true);
                 isAtMaxJumpHeight = false;
                 m_GravityMultiplier = initialGravityModifier;
                 currentFloatTime += Time.fixedDeltaTime;
