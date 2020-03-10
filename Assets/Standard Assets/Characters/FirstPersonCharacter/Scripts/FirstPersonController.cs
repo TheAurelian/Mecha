@@ -9,7 +9,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
     [RequireComponent(typeof (CharacterController))]
     [RequireComponent(typeof (AudioSource))]
     public class FirstPersonController : MonoBehaviour
-    {
+    {        
         [SerializeField] private bool m_IsWalking;
         [SerializeField] private float m_WalkSpeed;
         [SerializeField] private float m_RunSpeed;
@@ -29,6 +29,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         [SerializeField] private AudioClip m_LandSound;           // the sound played when character touches back on ground.
 
         private Camera m_Camera;
+        private float initialGravityModifier;
         private bool m_Jump;
         private float m_YRotation;
         private Vector2 m_Input;
@@ -42,9 +43,33 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private bool m_Jumping;
         private AudioSource m_AudioSource;
 
+        private void OnEnable()
+        {
+            PlayerFly.OnPlayerFly += PlayerFly_OnPlayerFly;
+        }
+
+        private void PlayerFly_OnPlayerFly(bool obj)
+        {
+            switch (obj)
+            {
+                case true:                    
+                    m_GravityMultiplier = 0;
+                    break;
+                case false:
+                    m_GravityMultiplier = initialGravityModifier;
+                    break;
+            }
+        }
+
+        private void OnDisable()
+        {
+            PlayerFly.OnPlayerFly -= PlayerFly_OnPlayerFly;
+        }
+
         // Use this for initialization
         private void Start()
         {
+            initialGravityModifier = m_GravityMultiplier;
             m_CharacterController = GetComponent<CharacterController>();
             m_Camera = Camera.main;
             m_OriginalCameraPosition = m_Camera.transform.localPosition;
@@ -54,7 +79,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_NextStep = m_StepCycle/2f;
             m_Jumping = false;
             m_AudioSource = GetComponent<AudioSource>();
-			m_MouseLook.Init(transform , m_Camera.transform);
+			m_MouseLook.Init(transform , m_Camera.transform);            
         }
 
 
