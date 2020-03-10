@@ -48,6 +48,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         // Fly 
         [Header("How long the player will float before falling")]
         [SerializeField] private float floatTime = 3f;
+        [Header("UI Slider that measures how much float time is left")]
+        [SerializeField] private UnityEngine.UI.Slider jumpSlider;
         private bool isJumpHeld;
         private float currentFloatTime;
         private float currentMaxJumpHeight;
@@ -122,13 +124,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_MoveDir.x = desiredMove.x*speed;
             m_MoveDir.z = desiredMove.z*speed;
 
-            if (isJumpHeld)
+            if (isJumpHeld) // TODO Very bad code! This is for prototype purposes. In the future, this whole thing should be subclassed (Actually we should really make our own FP controller cause I fucking hate Unity Standard Assets
             {
                 if (m_CharacterController.isGrounded) 
                 {
                     playerAnim.SetBool("Jump", false);
                 }
-                else
+                else if (isJumpHeld)
                 {
                     playerAnim.SetBool("Jump", true);
                 }
@@ -145,7 +147,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     playerAnim.SetBool("Float", true);
                     isAtMaxJumpHeight = true;
                     m_GravityMultiplier = 0;
-                    currentFloatTime -= Time.fixedDeltaTime;
+                    currentFloatTime -= Time.fixedDeltaTime * 2;
                 }
             }
             else
@@ -155,8 +157,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 playerAnim.SetBool("Drop", false);
                 isAtMaxJumpHeight = false;
                 currentMaxJumpHeight = 0;
-                currentFloatTime = floatTime;
                 m_GravityMultiplier = initialGravityModifier;
+            }
+
+            if (currentFloatTime < floatTime)
+            {
+                currentFloatTime += Time.fixedDeltaTime;
             }
 
             if (currentFloatTime <= 0)
@@ -164,7 +170,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 playerAnim.SetBool("Drop", true);
                 isAtMaxJumpHeight = false;
                 m_GravityMultiplier = initialGravityModifier;
-                currentFloatTime += Time.fixedDeltaTime;
+                
+            }
+
+            if (Math.Round(jumpSlider.value, 2) != Math.Round(currentFloatTime, 2)) // Never directly compare two floating points without truncating!
+            {
+                jumpSlider.value = currentFloatTime;
             }
 
             if (m_CharacterController.isGrounded)
@@ -191,6 +202,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
                 
             }
+
+            
 
             m_CollisionFlags = m_CharacterController.Move(m_MoveDir*Time.fixedDeltaTime);
 
