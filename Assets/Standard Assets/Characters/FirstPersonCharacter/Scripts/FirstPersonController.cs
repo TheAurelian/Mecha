@@ -9,11 +9,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
     [RequireComponent(typeof (CharacterController))]
     [RequireComponent(typeof (AudioSource))]
     public class FirstPersonController : MonoBehaviour
-    {
+    {        
         [SerializeField] private bool m_IsWalking;
         [SerializeField] private float m_WalkSpeed;
         [SerializeField] private float m_RunSpeed;
         [SerializeField] [Range(0f, 1f)] private float m_RunstepLenghten;
+        [Header("Player will float at Apex of jump")]
         [SerializeField] private float m_JumpSpeed;
         [SerializeField] private float m_StickToGroundForce;
         [SerializeField] private float m_GravityMultiplier;
@@ -29,6 +30,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         [SerializeField] private AudioClip m_LandSound;           // the sound played when character touches back on ground.
 
         private Camera m_Camera;
+        private float initialGravityModifier;
         private bool m_Jump;
         private float m_YRotation;
         private Vector2 m_Input;
@@ -41,10 +43,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private float m_NextStep;
         private bool m_Jumping;
         private AudioSource m_AudioSource;
+        private Animator playerAnim;
+
+        // Fly 
+        [Header("How long the player will float before falling")]
+        [SerializeField] private float floatTime = 3f;
+        [Header("UI Slider that measures how much float time is left")]
+        [SerializeField] private UnityEngine.UI.Slider jumpSlider;
+        private bool isJumpHeld;
+        private float currentFloatTime;
+        private float currentMaxJumpHeight;
+        private bool isAtMaxJumpHeight = false;
 
         // Use this for initialization
         private void Start()
         {
+            initialGravityModifier = m_GravityMultiplier;
             m_CharacterController = GetComponent<CharacterController>();
             m_Camera = Camera.main;
             m_OriginalCameraPosition = m_Camera.transform.localPosition;
@@ -55,6 +69,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_Jumping = false;
             m_AudioSource = GetComponent<AudioSource>();
 			m_MouseLook.Init(transform , m_Camera.transform);
+            playerAnim = GetComponentInParent<Animator>();
         }
 
 
@@ -67,6 +82,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 m_Jump = CrossPlatformInputManager.GetButtonDown("Jump");
             }
+            isJumpHeld = Input.GetButton("Jump");
 
             if (!m_PreviouslyGrounded && m_CharacterController.isGrounded)
             {
@@ -108,6 +124,59 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_MoveDir.x = desiredMove.x*speed;
             m_MoveDir.z = desiredMove.z*speed;
 
+            if (isJumpHeld) // TODO Very bad code! This is for prototype purposes. In the future, this whole thing should be subclassed (Actually we should really make our own FP controller cause I fucking hate Unity Standard Assets
+            {
+                if (m_CharacterController.isGrounded) 
+                {
+                    playerAnim.SetBool("Jump", false);
+                }
+                else if (isJumpHeld)
+                {
+                    playerAnim.SetBool("Jump", true);
+                }
+                
+                if (transform.position.y > currentMaxJumpHeight)
+                {
+                    playerAnim.SetBool("FloatUp", true);
+                    m_GravityMultiplier = initialGravityModifier;
+                    currentMaxJumpHeight = transform.position.y;
+                }
+                else
+                {
+                    playerAnim.SetBool("FloatUp", false);
+                    playerAnim.SetBool("Float", true);
+                    isAtMaxJumpHeight = true;
+                    m_GravityMultiplier = 0;
+                    currentFloatTime -= Time.fixedDeltaTime * 2;
+                }
+            }
+            else
+            {
+                playerAnim.SetBool("FloatUp", false);
+                playerAnim.SetBool("Float", false);
+                playerAnim.SetBool("Drop", false);
+                isAtMaxJumpHeight = false;
+                currentMaxJumpHeight = 0;
+                m_GravityMultiplier = initialGravityModifier;
+            }
+
+            if (currentFloatTime < floatTime)
+            {
+                currentFloatTime += Time.fixedDeltaTime;
+            }
+
+            if (currentFloatTime <= 0)
+            {
+                playerAnim.SetBool("Drop", true);
+                isAtMaxJumpHeight = false;
+                m_GravityMultiplier = initialGravityModifier;
+                
+            }
+
+            if (Math.Round(jumpSlider.value, 2) != Math.Round(currentFloatTime, 2)) // Never directly compare two floating points without truncating!
+            {
+                jumpSlider.value = currentFloatTime;
+            }
 
             if (m_CharacterController.isGrounded)
             {
@@ -121,10 +190,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     m_Jumping = true;
                 }
             }
-            else
+            else 
             {
-                m_MoveDir += Physics.gravity*m_GravityMultiplier*Time.fixedDeltaTime;
+                if (!isAtMaxJumpHeight)
+                {
+                    m_MoveDir += Physics.gravity * Time.fixedDeltaTime * m_GravityMultiplier;
+                }
+                else
+                {
+                    m_MoveDir = new Vector3(m_MoveDir.x, 0, m_MoveDir.z);
+                }
+                
             }
+
+            
+
             m_CollisionFlags = m_CharacterController.Move(m_MoveDir*Time.fixedDeltaTime);
 
             ProgressStepCycle(speed);
